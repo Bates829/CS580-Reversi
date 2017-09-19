@@ -6,8 +6,8 @@ var state = {
   over: false,
   turn: 'b',
   board: [
-    [null, null, null, null, null, null,  null, null],
-    [null, null, null, null, null,null, null, null],
+    [null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null],
     [null, null, null, 'w', 'b', null, null, null],
     [null, null, null, 'b', 'w', null, null, null],
@@ -32,105 +32,22 @@ var ctx;
 function getLegalMoves(piece, x, y) {
   var moves = [];
   switch(piece) {
-    case 'b': // black can only move down the board diagonally
-      checkSlide(moves, x-1, y-1);
-      checkSlide(moves, x+1, y-1);
-      checkJump(moves, {captures:[],landings:[], x:x, y:y}, piece, x, y);
+    case 'b':
+
       break;
-    case 'w':  // white can only move up the board diagonally
-      checkSlide(moves, x-1, y+1);
-      checkSlide(moves, x+1, y+1);
-      checkJump(moves, {captures:[],landings:[], x:x, y:y}, piece, x, y);
+    case 'w':
+
       break;
   }
   return moves;
 }
 
-/** @function copyJumps
-  * A helper function to clone a jumps object
-  * @param {Object} jumps - the jumps to clone
-  * @returns The cloned jump object
-  */
-function copyJumps(jumps) {
-  // Use Array.prototype.slice() to create a copy
-  // of the landings and captures array.
-  var newJumps = {
-    x: jumps.x,
-    y: jumps.y,
-    landings: jumps.landings.slice(),
-    captures: jumps.captures.slice()
-  }
-  return newJumps;
+function check(piece, x, y){
+  var checked = false;
+
+  for(var i = -1; i <= 1; i++){}
 }
 
-/** @function checkJump
-  * A recursive helper function to determine legal jumps
-  * and add them to the moves array
-  * @param {Array} moves - the moves array
-  * @param {Object} jumps - an object describing the
-  *  prior jumps in this jump chain.
-  * @param {String} piece - 'b' or 'w' for black or white pawns,
-  *    'bk' or 'wk' for white or black kings
-  * @param {integer} x - the current x position of the piece
-  * @param {integer} y - the current y position of the peice
-  */
-function checkJump(moves, jumps, piece, x, y) {
-  switch(piece) {
-    case 'b': // black can only move down the board diagonally
-      checkLanding(moves, copyJumps(jumps), piece, x-1, y-1, x-2, y-2);
-      checkLanding(moves, copyJumps(jumps), piece, x+1, y-1, x+2, y-2);
-      break;
-    case 'w':  // white can only move up the board diagonally
-      checkLanding(moves, copyJumps(jumps), piece, x-1, y+1, x-2, y+2);
-      checkLanding(moves, copyJumps(jumps), piece, x+1, y+1, x+2, y+2);
-      break;
-    case 'bk': // kings can move diagonally any direction
-    case 'wk': // kings can move diagonally any direction
-      checkLanding(moves, copyJumps(jumps), piece, x-1, y+1, x-2, y+2);
-      checkLanding(moves, copyJumps(jumps), piece, x+1, y+1, x+2, y+2);
-      checkLanding(moves, copyJumps(jumps), piece, x-1, y-1, x-2, y-2);
-      checkLanding(moves, copyJumps(jumps), piece, x+1, y-1, x+2, y-2);
-      break;
-  }
-}
-
-/** @function checkLanding
-  * A helper function to determine if a landing is legal,
-  * if so, it adds the jump sequence to the moves list
-  * and recursively seeks additional jump opportunities.
-  * @param {Array} moves - the moves array
-  * @param {Object} jumps - an object describing the
-  *  prior jumps in this jump chain.
-  * @param {String} piece - 'b' or 'w' for black or white pawns,
-  *    'bk' or 'wk' for white or black kings
-  * @param {integer} cx - the 'capture' x position the piece is jumping over
-  * @param {integer} cy - the 'capture' y position of the peice is jumping over
-  * @param {integer} lx - the 'landing' x position the piece is jumping onto
-  * @param {integer} ly - the 'landing' y position of the peice is jumping onto
-  */
-function checkLanding(moves, jumps, piece, cx, cy, lx, ly) {
-  // Check that we're not jumping back to our starting position
-  if(lx == jumps.x && ly == jumps.y) return;
-  // Check landing square is on grid
-  if(lx < 0 || lx > 9 || ly < 0 || ly > 9) return;
-  // Check landing square is unoccupied
-  if(state.board[ly][lx]) return;
-  // Check capture square is occupied by opponent
-  if(state.turn === 'b' && !(state.board[cy][cx] === 'w' || state.board[cy][cx] === 'wk')) return;
-  if(state.turn === 'w' && !(state.board[cy][cx] === 'b' || state.board[cy][cx] === 'bk')) return;
-  // Check that we haven't landed on this square previously
-  if(0 < jumps.landings.indexOf(function(landing){return landing.x == lx && landing.y == ly;})) return;
-  // legal jump! add it to the moves list
-  jumps.captures.push({x: cx, y: cy});
-  jumps.landings.push({x: lx, y: ly});
-  moves.push({
-    type: 'jump',
-    captures: jumps.captures.slice(),
-    landings: jumps.landings.slice()
-  });
-  // check for further jump opportunities
-  checkJump(moves, jumps, piece, lx, ly);
-}
 
 /** @function ApplyMove
   * A function to apply the selected move to the game
@@ -161,14 +78,21 @@ function applyMove(x, y, move) {
   * has yet won.
   */
 function checkForVictory() {
-  if(state.captures.w == 20) {
-    state.over = true;
-    return 'black wins';
+  for(var y = 0; y < 8; y++){
+    for(var x = 0; x < 8; x++){
+      if(state.board[y][x].charAt(0) === 'w') state.captures.w++;
+      else state.captures.b++;
+    }
   }
-  if(state.captures.b == 20) {
-    state.over = true;
-    return 'white wins';
+
+  if(state.captures.w === 0 || state.captures.b === 0 || state.captures.w + state.captures.b === 64){
+    if(state.captures.w > state.captures.w){
+      alert("White Wins!");
+    }
+    else alert("Black Wins!");
+    //reset();
   }
+
   return null;
 }
 
@@ -195,19 +119,6 @@ function renderChecker(piece, x, y) {
   ctx.fill();
 }
 
-/** @function renderSquare
-  * Renders a single square on the game board
-  * as well as any checkers on it.
-  */
-  function renderSquare(x,y) {
-    ctx.fillStyle = '#006400';
-    if((x+y) % 2 == 0){
-      ctx.fillRect(x*100, y*100, 100, 100);
-      if(state.board[y][x]) {
-        renderChecker(state.board[y][x], x, y);
-      }
-    }
-  }
 
 /** @function renderBoard()
   * Renders the entire game board.
@@ -216,7 +127,16 @@ function renderBoard() {
   if(!ctx) return;
   for(var y = 0; y < 8; y++) {
     for(var x = 0; x < 8; x++) {
-      renderSquare(x, y);
+      ctx.beginPath();
+      ctx.rect(x * 100, y * 100, 100, 100);
+      ctx.fillStyle = 'green';
+      ctx.strokeStyle = 'brown';
+      ctx.fill();
+      ctx.stroke();
+      ctx.closePath();
+      if(state.board[y][x]) {
+        renderChecker(state.board[y][x], x, y);
+      }
     }
   }
 }
@@ -251,7 +171,7 @@ function handleMouseUp(event) {
   var position = boardPosition(event.clientX, event.clientY);
   var x = position.x;
   var y = position.y;
-  if(x < 0 || y < 0 || x > 9 || y > 9) {
+  if(x < 0 || y < 0 || x > 7 || y > 7) {
     // Release off board; rubberband back to startPosition
     var sx = state.movingPiece.startPosition.x;
     var sy = state.movingPiece.startPosition.y;
@@ -323,7 +243,7 @@ function hoverOverChecker(event) {
   var y = Math.floor(event.clientY / 50);
   // Adjust for scrolling
   // Avoid array out-of-bounds issues.
-  if(x < 0 || y < 0 || x > 9 || y > 9) return;
+  if(x < 0 || y < 0 || x > 7 || y > 7) return;
   // Make sure we're over the current player
   if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
     // Highlight the checker to move
