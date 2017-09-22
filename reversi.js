@@ -1,8 +1,7 @@
-// checkers.js
+// reversi.js
 
 /** The state of the game */
 var state = {
-  over: false,
   turn: 'b',
   board: [
     [null, null, null, null, null, null, null, null],
@@ -13,8 +12,7 @@ var state = {
     [null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null],
     [null, null, null, null, null, null, null, null]
-  ],
-  captures: {w: 0, b: 0}
+  ]
 }
 
 var ctx;
@@ -91,7 +89,13 @@ function checkForVictory() {
     }
   }
   var message = document.getElementById('currPlayer');
-  message.innerHTML = wCount >= bCount ? "White player won with " + wCount + " pieces" : "Black player won with " + bCount + " pieces";
+  if(wCount > bCount){
+    message.innerHTML = "White player won with " + wCount + " pieces";
+  }
+  else if(bCount > wCount){
+    message.innerHTML = "Black player won with " + bCount + " pieces";
+  }
+  else message.innerHTML = "Tie both players have 32 pieces";
 }
 
 
@@ -101,7 +105,10 @@ function nextTurn() {
   else state.turn = 'b';
 
   var currPlayer = document.getElementById('currPlayer');
-  currPlayer.innerHTML = state.turn === 'b' ? 'Move: Black' : 'Move: White';
+  if(state.turn === 'b'){
+    currPlayer.innerHTML = 'Move: Black'
+  }
+  else currPlayer.innerHTML = 'Move: White';
   getLegalMoves();
 }
 
