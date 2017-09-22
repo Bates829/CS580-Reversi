@@ -2,7 +2,6 @@
 
 /** The state of the game */
 var state = {
-  action: 'idle',
   over: false,
   turn: 'b',
   board: [
@@ -20,109 +19,108 @@ var state = {
 
 var ctx;
 
-/** @function getLegalMoves
-  * returns a list of legal moves for the specified
-  * piece to make.
-  * @param {String} piece - 'b' or 'w' for black or white pawns,
-  *    'bk' or 'wk' for white or black kings.
-  * @param {integer} x - the x position of the piece on the board
-  * @param {integer} y - the y position of the piece on the board
-  * @returns {Array} the legal moves as an array of objects.
-  */
-function getLegalMoves(piece, x, y) {
-  var moves = [];
-  switch(piece) {
-    case 'b':
-
-      break;
-    case 'w':
-
-      break;
+// Returns a bool depending on if it is on the board or not
+function onBoard(x, y){
+  if(x >= 0 || x <= 7 || y >= 0 || y <= 7){
+    return true;
   }
-  return moves;
+  else return false;
 }
 
-function check(piece, x, y){
-  var checked = false;
-
-  for(var i = -1; i <= 1; i++){}
+// Gets the possible moves for player
+function getLegalMoves() {
+  var curr = state.turn;
+  var enemy = 'b';
+  if(curr === 'b') enemy = 'w'
+  for(var y = 0; y < state.board.length; y++){
+    for(var x = 0; x < state.board.length; x++){
+      if(state.board[y][x] === curr){
+        if(state.board[y-1] && state.board[y-1][x-1] && state.board[y-1][x-1] === enemy){
+          checkMove(x-1, y-1, -1, -1);
+        }
+        if(state.board[y-1] && state.board[y-1][x] && state.board[y-1][x] === enemy){
+          checkMove(x, y-1, 0, -1);
+        }
+        if(state.board[y-1] && state.board[y-1][x+1] && state.board[y-1][x+1] === enemy){
+          checkMove(x+1, y-1, 1, -1);
+        }
+        if(state.board[y] && state.board[y][x-1] && state.board[y][x-1] === enemy){
+          checkMove(x-1, y, -1, 0);
+        }
+        if(state.board[y] && state.board[y][x+1] && state.board[y][x+1] === enemy){
+          checkMove(x+1, y, 1, 0);
+        }
+        if(state.board[y+1] && state.board[y+1][x-1] && state.board[y+1][x-1] === enemy){
+          checkMove(x-1, y+1, -1, 1);
+        }
+        if(state.board[y+1] && state.board[y+1][x] && state.board[y+1][x] === enemy){
+          checkMove(x, y+1, 0, 1);
+        }
+        if(state.board[y+1] && state.board[y+1][x+1] && state.board[y+1][x+1] === enemy){
+          checkMove(x+1, y+1, 1, 1);
+        }
+      }
+    }
+  }
+  checkForVictory();
 }
 
-
-/** @function ApplyMove
-  * A function to apply the selected move to the game
-  * @param {object} move - the move to apply.
-  */
-function applyMove(x, y, move) {
-  // TODO: Apply the move
-  if(move.type === "slide") {
-    state.board[move.y][move.x] = state.board[y][x];
-    state.board[y][x] = null;
-  } else {
-    move.captures.forEach(function(square){
-      var piece = state.board[square.y][square.x];
-      state.captures[piece.substring(0,1)]++;
-      state.board[square.y][square.x] = null;
-    });
-    var index = move.landings.length - 1;
-    state.board[move.landings[index].y][move.landings[index].x] = state.board[y][x];
-    state.board[y][x] = null;
+// Checks for valid spot to place possible moves
+function checkMove(x, y, nextX, nextY){
+  var curr = state.turn;
+  if(x + nextX < 0 || x + nextX > 7 || y + nextY < 0 || y + nextY > 7) return;
+  var square = state.board[y + nextY][x + nextX];
+  if(square === curr || square === 'move') return;
+  if(square === null || square === 'move'){
+    state.board[y + nextY][x + nextX] = 'move';
+  }
+  else{
+    checkMove(x + nextX, y + nextY, nextX, nextY);
   }
 }
 
-/** @function checkForVictory
-  * Checks to see if a victory has been actived
-  * (All peices of one color have been captured)
-  * @return {String} one of three values:
-  * "White wins", "Black wins", or null, if neither
-  * has yet won.
-  */
+// Checks to see if the game is over and who won
 function checkForVictory() {
-  for(var y = 0; y < 8; y++){
-    for(var x = 0; x < 8; x++){
-      if(state.board[y][x].charAt(0) === 'w') state.captures.w++;
-      else state.captures.b++;
+  var wCount = 0;
+  var bCount = 0;
+  for(var y = 0; y < state.board.length; y++){
+    for(var x = 0; x < state.board.length; x++){
+      if(state.board[y][x] === 'move') return;
+      if(state.board[y][x] === 'b') bCount++;
+      else if(state.board[y][x] === 'w') wCount++;
     }
   }
-
-  if(state.captures.w === 0 || state.captures.b === 0 || state.captures.w + state.captures.b === 64){
-    if(state.captures.w > state.captures.w){
-      alert("White Wins!");
-    }
-    else alert("Black Wins!");
-    //reset();
-  }
-
-  return null;
+  var message = document.getElementById('currPlayer');
+  message.innerHTML = wCount >= bCount ? "White player won with " + wCount + " pieces" : "Black player won with " + bCount + " pieces";
 }
 
-/** @function nextTurn()
-  * Starts the next turn by changing the
-  * turn property of state.
-  */
+
+// Changes the turn of player and prints to screen
 function nextTurn() {
   if(state.turn === 'b') state.turn = 'w';
   else state.turn = 'b';
+
+  var currPlayer = document.getElementById('currPlayer');
+  currPlayer.innerHTML = state.turn === 'b' ? 'Move: Black' : 'Move: White';
+  getLegalMoves();
 }
 
-/** @function renderChecker
-  * Renders a checker at the specified position
-  */
-function renderChecker(piece, x, y) {
+//Creates pieces and colors them based on player or move
+function renderPiece(piece, x, y) {
   ctx.beginPath();
   if(state.board[y][x].charAt(0) === 'w') {
     ctx.fillStyle = '#fff';
-  } else {
+  }
+  else if(state.board[y][x].charAt(0) === 'b'){
     ctx.fillStyle = '#000';
   }
+  else ctx.fillStyle = 'rgba(211,211,211, 0.2)';
   ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
   ctx.fill();
 }
 
 
-/** @function renderBoard()
-  * Renders the entire game board.
-  */
+// Renders the entire game board
 function renderBoard() {
   if(!ctx) return;
   for(var y = 0; y < 8; y++) {
@@ -133,138 +131,77 @@ function renderBoard() {
       ctx.strokeStyle = 'brown';
       ctx.fill();
       ctx.stroke();
-      ctx.closePath();
       if(state.board[y][x]) {
-        renderChecker(state.board[y][x], x, y);
+      renderPiece(state.board[y][x], x, y);
+      }
+      ctx.closePath();
+    }
+  }
+}
+
+// Handles a mouse click event
+function handleMouseDown(event){
+  if(!ctx) return;
+  var x = Math.floor(event.clientX / 50);
+  var y =  Math.floor(event.clientY / 50);
+  if(!onBoard(x, y)) return;
+  if(state.board[y][x] && state.board[y][x] === 'move'){
+    capturePiece(x, y, -1, -1);
+    capturePiece(x, y, -1, 0);
+    capturePiece(x, y, -1, 1);
+    capturePiece(x, y, 0, -1);
+    capturePiece(x, y, 0, 1);
+    capturePiece(x, y, 1, -1);
+    capturePiece(x, y, 1, 0);
+    capturePiece(x, y, 1, 1);
+    clearMove();
+    nextTurn();
+    renderBoard();
+  }
+}
+
+// Clears the possible moves from the board
+function clearMove(){
+  for(var y; y < 8; y++){
+    for(var x; x < 8; x++){
+      if(state.board[y][x] === 'move'){
+        state.board[y][x] = null;
       }
     }
   }
 }
 
-function boardPosition(x, y) {
-  var boardX = Math.floor(x / 50);
-  var boardY = Math.floor(y / 50);
-  return {x: boardX, y: boardY}
-}
+// Changes pieces captured to apporiate color
+function capturePiece(x, y, nextX, nextY){
+  var curr = state.turn;
+  var enemy = 'b';
+  if(curr === 'b') enemy = 'w';
 
-function handleMouseDown(event) {
-  var position = boardPosition(event.clientX, event.clientY);
-  var x = position.x;
-  var y = position.y;
-  if(x < 0 || y < 0 || x > 7 || y > 7) return;
-  // Make sure we're over the current player
-  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
-    // pick up piece
-    state.movingPiece = {
-      piece: state.board[y][x],
-      startPosition: {x: x, y: y},
-      currentPosition: boardPosition(event.clientX,event.clientY)
-    }
-    state.action = "dragging";
-    state.board[y][x] = null;
-    renderBoard();
+  if(!state.board[y + nextY] || !state.board[y + nextY][x + nextX]) return false;
+  if(state.board[y + nextY][x + nextX] === null) return false;
+  if(state.board[y + nextY][x + nextX] === curr){
+    state.board[y][x] = curr;
+    return true;
+  }
+  else if(capturePiece(x + nextX, y + nextY, nextX, nextY)){
+    state.board[y][x] = curr;
+    return true;
   }
 }
 
-function handleMouseUp(event) {
-  if(state.action !== 'dragging') return;
-  var position = boardPosition(event.clientX, event.clientY);
-  var x = position.x;
-  var y = position.y;
-  if(x < 0 || y < 0 || x > 7 || y > 7) {
-    // Release off board; rubberband back to startPosition
-    var sx = state.movingPiece.startPosition.x;
-    var sy = state.movingPiece.startPosition.y;
-    state.board[sy][sx] = state.movingPiece.piece;
-    state.movingPiece = null;
-    state.action = "idle";
-    renderBoard();
-    return;
-  };
-  // If the drop is part of a legal move...
-  if(true) {
-    var lx = state.movingPiece.currentPosition.x;
-    var ly = state.movingPiece.currentPosition.y;
-    state.board[ly][lx] = state.movingPiece.piece;
-    state.movingPiece = null;
-    state.action = "idle";
-    renderBoard();
-    return;
-  }
-}
-
-function renderDragging() {
-  renderBoard();
-
-  // Render our ghost checker
-  ctx.fillStyle = '#555';
-  ctx.beginPath();
-  ctx.arc(
-    state.movingPiece.startPosition.x*100+50,
-    state.movingPiece.startPosition.y*100+50,
-    40, 0, Math.PI * 2
-  );
-  ctx.fill();
-
-  // Render our moving checker
-  ctx.strokeStyle = 'yellow';
-  ctx.beginPath();
-  ctx.arc(
-    state.movingPiece.currentPosition.x*100+50,
-    state.movingPiece.currentPosition.y*100+50,
-    40, 0, Math.PI * 2
-  );
-  ctx.stroke();
-
-}
-
-function handleMouseMove(event) {
-  renderBoard();
-  switch(state.action) {
-    case 'idle':
-      hoverOverChecker(event);
-      break;
-    case 'dragging':
-      state.movingPiece.currentPosition =
-        boardPosition(event.clientX, event.clientY);
-      renderDragging();
-      break;
-  }
-}
-
-/** @function hoverOverChecker
-  * Event handler for when a player is deciding
-  * where to move.
-  */
-function hoverOverChecker(event) {
-  // Make sure we have a canvas context to render to
-  if(!ctx) return;
-  var x = Math.floor(event.clientX / 50);
-  var y = Math.floor(event.clientY / 50);
-  // Adjust for scrolling
-  // Avoid array out-of-bounds issues.
-  if(x < 0 || y < 0 || x > 7 || y > 7) return;
-  // Make sure we're over the current player
-  if(state.board[y][x] && state.board[y][x].charAt(0) === state.turn) {
-    // Highlight the checker to move
-    ctx.strokeWidth = 15;
-    ctx.strokeStyle = "yellow";
-    ctx.beginPath();
-    ctx.arc(x*100+50, y*100+50, 40, 0, Math.PI * 2);
-    ctx.stroke();
-    // TODO: Highlight possible moves
-  }
-}
-
+// Starts the game
 function setup() {
   var canvas = document.createElement('canvas');
   canvas.width = 800;
   canvas.height = 800;
   canvas.onmousedown = handleMouseDown;
-  canvas.onmouseup = handleMouseUp;
-  canvas.onmousemove = handleMouseMove;
   document.body.appendChild(canvas);
   ctx = canvas.getContext('2d');
+  var info = document.createElement('div');
+  info.id = 'currPlayer';
+  info.innerHTML = 'Move: Black';
+  document.body.appendChild(info);
+  getLegalMoves();
   renderBoard();
 }
 
