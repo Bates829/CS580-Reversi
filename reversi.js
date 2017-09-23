@@ -28,34 +28,34 @@ function onBoard(x, y){
 // Gets the possible moves for player
 function getLegalMoves() {
   var curr = state.turn;
-  var enemy = 'b';
-  if(curr === 'b') enemy = 'w'
+  var enemy = 'w';
+  if(curr === 'w') enemy = 'b'
   for(var y = 0; y < state.board.length; y++){
     for(var x = 0; x < state.board.length; x++){
       if(state.board[y][x] === curr){
-        if(state.board[y-1] && state.board[y-1][x-1] && state.board[y-1][x-1] === enemy){
-          checkMove(x-1, y-1, -1, -1);
+        if(state.board[y-1] && state.board[y-1][x-1] === enemy){
+          checkMove(x-1, y-1);
         }
-        if(state.board[y-1] && state.board[y-1][x] && state.board[y-1][x] === enemy){
-          checkMove(x, y-1, 0, -1);
+        if(state.board[y-1] && state.board[y-1][x] === enemy){
+          checkMove(x, y-1);
         }
-        if(state.board[y-1] && state.board[y-1][x+1] && state.board[y-1][x+1] === enemy){
-          checkMove(x+1, y-1, 1, -1);
+        if(state.board[y-1] && state.board[y-1][x+1] === enemy){
+          checkMove(x+1, y-1);
         }
-        if(state.board[y] && state.board[y][x-1] && state.board[y][x-1] === enemy){
-          checkMove(x-1, y, -1, 0);
+        if(state.board[y] && state.board[y][x-1]  === enemy){
+          checkMove(x-1, y);
         }
-        if(state.board[y] && state.board[y][x+1] && state.board[y][x+1] === enemy){
-          checkMove(x+1, y, 1, 0);
+        if(state.board[y] && state.board[y][x+1] === enemy){
+          checkMove(x+1, y);
         }
-        if(state.board[y+1] && state.board[y+1][x-1] && state.board[y+1][x-1] === enemy){
-          checkMove(x-1, y+1, -1, 1);
+        if(state.board[y+1] && state.board[y+1][x-1] === enemy){
+          checkMove(x-1, y+1);
         }
-        if(state.board[y+1] && state.board[y+1][x] && state.board[y+1][x] === enemy){
-          checkMove(x, y+1, 0, 1);
+        if(state.board[y+1] && state.board[y+1][x] === enemy){
+          checkMove(x, y+1);
         }
-        if(state.board[y+1] && state.board[y+1][x+1] && state.board[y+1][x+1] === enemy){
-          checkMove(x+1, y+1, 1, 1);
+        if(state.board[y+1] && state.board[y+1][x+1] === enemy){
+          checkMove(x+1, y+1);
         }
       }
     }
@@ -64,16 +64,21 @@ function getLegalMoves() {
 }
 
 // Checks for valid spot to place possible moves
-function checkMove(x, y, nextX, nextY){
+function checkMove(x, y){
   var curr = state.turn;
-  if(x + nextX < 0 || x + nextX > 7 || y + nextY < 0 || y + nextY > 7) return;
-  var square = state.board[y + nextY][x + nextX];
-  if(square === curr || square === 'move') return;
-  if(square === null || square === 'move'){
-    state.board[y + nextY][x + nextX] = 'move';
-  }
-  else{
-    checkMove(x + nextX, y + nextY, nextX, nextY);
+  for(var y1 = -1; y1 <= 1; y1++){
+    for(var x1 =-1; x1 <=1; x1++){
+      if(y1 === 0 && x1 === 0) continue;
+        var moveY1 = y + y1;
+        var moveX1 = x + x1;
+        if(moveX1 < 0 || moveX1 >= 8 || moveY1 < 0 || moveY1 >= 8) break;
+        var cell = state.board[moveY1][moveX1];
+        if(cell === null || cell === 'move'){
+          if(cell !== curr){
+            state.board[moveY1][moveX1] = 'move';
+          }
+        }
+    }
   }
 }
 
